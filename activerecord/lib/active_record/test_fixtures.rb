@@ -43,9 +43,11 @@ module ActiveRecord
       def fixtures(*fixture_set_names)
         if fixture_set_names.first == :all
           raise StandardError, "No fixture path found. Please set `#{self}.fixture_path`." if fixture_path.blank?
-          fixture_set_names = Dir[::File.join(fixture_path, "{**,*}/*.{yml}")].uniq
-          fixture_set_names.reject! { |f| f.start_with?(file_fixture_path.to_s) } if defined?(file_fixture_path) && file_fixture_path
-          fixture_set_names.map! { |f| f[fixture_path.to_s.size..-5].delete_prefix("/") }
+          Array(fixture_path).flat_map do |path|
+            fixture_set_names = Dir[::File.join(path, "{**,*}/*.{yml}")].uniq
+            fixture_set_names.reject! { |f| f.start_with?(file_fixture_path.to_s) } if defined?(file_fixture_path) && file_fixture_path
+            fixture_set_names.map! { |f| f[path.to_s.size..-5].delete_prefix("/") }
+          end.uniq
         else
           fixture_set_names = fixture_set_names.flatten.map(&:to_s)
         end
@@ -215,7 +217,7 @@ module ActiveRecord
       end
 
       def load_fixtures(config)
-        ActiveRecord::FixtureSet.create_fixtures(fixture_path, fixture_table_names, fixture_class_names, config).index_by(&:name)
+        ActiveRecord::FixtureSet.create_fixtures(Array(fixture_path), fixture_table_names, fixture_class_names, config).index_by(&:name)
       end
 
       def instantiate_fixtures
