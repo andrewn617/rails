@@ -1136,6 +1136,19 @@ class LoadAllFixturesTest < ActiveRecord::TestCase
   end
 end
 
+class LoadAllFixturesWithArrayTest < ActiveRecord::TestCase
+  def test_all_there
+    self.class.fixture_path = [FIXTURES_ROOT + "/all", FIXTURES_ROOT + "/categories"]
+    self.class.fixtures :all
+
+    if File.symlink? FIXTURES_ROOT + "/all/admin"
+      assert_equal %w(admin/accounts admin/users developers namespaced/accounts people special_categories subsubdir/arbitrary_filename tasks), fixture_table_names.sort
+    end
+  ensure
+    ActiveRecord::FixtureSet.reset_cache
+  end
+end
+
 class LoadAllFixturesWithPathnameTest < ActiveRecord::TestCase
   def test_all_there
     self.class.fixture_path = Pathname.new(FIXTURES_ROOT).join("all")
