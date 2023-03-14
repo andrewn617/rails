@@ -482,7 +482,7 @@ class FixturesTest < ActiveRecord::TestCase
     # Ensure that this file never exists
     assert_empty Dir[nonexistent_fixture_path + "*"]
 
-    assert_raise(Errno::ENOENT) do
+    assert_raise(ArgumentError) do
       ActiveRecord::FixtureSet.new(nil, "companies", Company, nonexistent_fixture_path)
     end
   end

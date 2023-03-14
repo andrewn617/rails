@@ -593,13 +593,14 @@ module ActiveRecord
       private
         def read_and_insert(fixtures_directories, fixture_files, class_names, connection) # :nodoc:
           fixtures_map = {}
+          directory_glob = "{#{fixtures_directories.join(",")}}"
           fixture_sets = fixture_files.map do |fixture_set_name|
             klass = class_names[fixture_set_name]
             fixtures_map[fixture_set_name] = new( # ActiveRecord::FixtureSet.new
               nil,
               fixture_set_name,
               klass,
-              ::File.join("{#{fixtures_directories.join(",")}}", fixture_set_name)
+              ::File.join(directory_glob, fixture_set_name)
             )
           end
           update_all_loaded_fixtures(fixtures_map)
@@ -715,10 +716,13 @@ module ActiveRecord
       # Loads the fixtures from the YAML file at +path+.
       # If the file sets the +model_class+ and current instance value is not set,
       # it uses the file value.
+
       def read_fixture_files(path)
-        yaml_files = Dir["#{path}/{**,*}/*.yml"].select { |f|
+        yaml_files = Dir["#{path}{.yml,/{**,*}/*.yml}"].select { |f|
           ::File.file?(f)
-        } + yaml_file_path(path)
+        }
+
+        raise ArgumentError, "No fixture files found for #{@name}" if yaml_files.empty?
 
         yaml_files.each_with_object({}) do |file, fixtures|
           FixtureSet::File.open(file) do |fh|
@@ -729,10 +733,6 @@ module ActiveRecord
             end
           end
         end
-      end
-
-      def yaml_file_path(path)
-        Dir["#{path}.yml"]
       end
   end
 
