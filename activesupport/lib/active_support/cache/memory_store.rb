@@ -30,7 +30,7 @@ module ActiveSupport
         extend self
 
         def dump(entry)
-          if entry.value && entry.value != true && !entry.value.is_a?(Numeric)
+          if entry.value && entry.value != true && !(entry.value.is_a?(Numeric) || entry.value.is_a?(Enumerable))
             Cache::Entry.new(dump_value(entry.value), expires_at: entry.expires_at, version: entry.version)
           else
             entry
