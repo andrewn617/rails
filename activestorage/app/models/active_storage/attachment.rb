@@ -145,7 +145,7 @@ class ActiveStorage::Attachment < ActiveStorage::Record
     end
 
     def named_variants
-      record.attachment_reflections[name]&.named_variants
+      record.attachment_reflections[name]&.named_variants || {}
     end
 
     def transformations_by_name(transformations)

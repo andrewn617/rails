@@ -142,6 +142,16 @@ class ActiveStorage::AttachmentTest < ActiveSupport::TestCase
     assert_nothing_raised { attachment.destroy }
   end
 
+  test "can create attachment without existing relation" do
+    assert_nothing_raised do
+      ActiveStorage::Attachment.create!(
+        record: @user,
+        name: "assets",
+        blob: create_blob
+      )
+    end
+  end
+
   private
     def assert_blob_identified_before_owner_validated(owner, blob, content_type)
       validated_content_type = nil
