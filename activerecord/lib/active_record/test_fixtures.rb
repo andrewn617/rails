@@ -6,6 +6,8 @@ module ActiveRecord
   module TestFixtures
     extend ActiveSupport::Concern
 
+    mattr_accessor :all_fixture_set_names, default: {} # :nodoc:
+
     def before_setup # :nodoc:
       setup_fixtures
       super
@@ -69,7 +71,9 @@ module ActiveRecord
       def fixtures(*fixture_set_names)
         if fixture_set_names.first == :all
           raise StandardError, "No fixture path found. Please set `#{self}.fixture_paths`." if fixture_paths.blank?
-          fixture_set_names = fixture_paths.flat_map do |path|
+          fixture_set_paths = fixture_paths.sort
+          fixture_set_paths << file_fixture_path if defined?(file_fixture_path) && file_fixture_path
+          fixture_set_names = TestFixtures.all_fixture_set_names[fixture_set_paths] ||= fixture_paths.flat_map do |path|
             names = Dir[::File.join(path, "{**,*}/*.{yml}")].uniq
             names.reject! { |f| f.start_with?(file_fixture_path.to_s) } if defined?(file_fixture_path) && file_fixture_path
             names.map! { |f| f[path.to_s.size..-5].delete_prefix("/") }
