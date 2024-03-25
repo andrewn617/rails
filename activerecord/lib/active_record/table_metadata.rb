@@ -27,7 +27,7 @@ module ActiveRecord
     end
 
     def associated_table(table_name)
-      reflection = klass._reflect_on_association(table_name) || klass._reflect_on_association(table_name.singularize)
+      reflection = klass._reflect_on_association(table_name) || klass._reflect_on_association(table_name.singularize) || klass.reflections.values.detect { |reflection| reflection.table_name == table_name }
 
       if !reflection && table_name == arel_table.name
         return self
