@@ -27,9 +27,45 @@ module ApplicationTests
       assert_not_includes last_response.body, "rails/railties/test/env_helpers.rb"
     end
 
+    test "backtrace is cleaned with custom silencers" do
+      setup_app
+
+      app_file "config/initializers/backtrace_silencers.rb", <<-RUBY
+        Rails.backtrace_cleaner.add_silencer { |line| require "debug"; binding.b; line.include?("foo_controller.rb") }
+      RUBY
+
+      app("development")
+      get "/"
+      if RUBY_VERSION >= "3.4"
+        assert_not_includes last_response.body, "app/app/controllers/foo_controller.rb:4:in 'FooController#index'"
+      else
+        assert_not_includes last_response.body, "app/app/controllers/foo_controller.rb:4:in `index'"
+      end
+      assert_not_includes last_response.body, "rails/railties/test/env_helpers.rb"
+    end
+
     test "backtrace is not cleaned" do
       switch_env("BACKTRACE", "1") do
         setup_app
+
+        app("development")
+        get "/"
+        if RUBY_VERSION >= "3.4"
+          assert_includes last_response.body, "app/app/controllers/foo_controller.rb:4:in 'FooController#index'"
+        else
+          assert_includes last_response.body, "app/app/controllers/foo_controller.rb:4:in `index'"
+        end
+        assert_includes last_response.body, "rails/railties/test/env_helpers.rb"
+      end
+    end
+
+    test "custom silencers are not cleaned" do
+      switch_env("BACKTRACE", "1") do
+        setup_app
+
+        app_file "config/initializers/backtrace_silencers.rb", <<-RUBY
+          Rails.backtrace_cleaner.add_silencer { |line| line.include?("foo_controller.rb") }
+        RUBY
 
         app("development")
         get "/"

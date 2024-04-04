@@ -113,6 +113,7 @@ module Minitest
       # Plugin can run without Rails loaded, check before filtering.
       if ::Rails.respond_to?(:backtrace_cleaner)
         Minitest.backtrace_filter = BacktraceFilterWithFallback.new(::Rails.backtrace_cleaner, Minitest.backtrace_filter)
+        require "debug"; binding.b
       end
     end
 

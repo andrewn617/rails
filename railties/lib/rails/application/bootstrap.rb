@@ -76,7 +76,10 @@ module Rails
       end
 
       initializer :configure_backtrace_cleaner, group: :all do
-        Rails.backtrace_cleaner.remove_silencers! if ENV["BACKTRACE"]
+        config.after_initialize do
+          Rails.backtrace_cleaner.remove_silencers! if ENV["BACKTRACE"]
+          require "debug"; binding.b
+        end
       end
 
       # Initialize cache early in the stack so railties can make use of it.

@@ -44,7 +44,7 @@ module ActiveSupport
     # against it. Filters run first, then silencers.
     def clean(backtrace, kind = :silent)
       filtered = filter_backtrace(backtrace)
-
+      require "debug"; binding.b
       case kind
       when :silent
         silence(filtered)
@@ -66,9 +66,9 @@ module ActiveSupport
 
       case kind
       when :silent
-        frame unless @silencers.any? { |s| s.call(frame) }
+        frame unless silencers.any? { |s| s.call(frame) }
       when :noise
-        frame if @silencers.any? { |s| s.call(frame) }
+        frame if silencers.any? { |s| s.call(frame) }
       else
         frame
       end
@@ -90,14 +90,14 @@ module ActiveSupport
     #   # Will reject all lines that include the word "puma", like "/gems/puma/server.rb" or "/app/my_puma_server/rb"
     #   backtrace_cleaner.add_silencer { |line| /puma/.match?(line) }
     def add_silencer(&block)
-      @silencers << block
+      silencers << block
     end
 
     # Removes all silencers, but leaves in the filters. Useful if your
     # context of debugging suddenly expands as you suspect a bug in one of
     # the libraries you use.
     def remove_silencers!
-      @silencers = []
+      silencers = []
     end
 
     # Removes all filters, but leaves in the silencers. Useful if you suddenly
@@ -112,7 +112,7 @@ module ActiveSupport
 
       def initialize_copy(_other)
         @filters = @filters.dup
-        @silencers = @silencers.dup
+        silencers = silencers.dup
       end
 
       def add_gem_filter
@@ -145,7 +145,7 @@ module ActiveSupport
       end
 
       def silence(backtrace)
-        @silencers.each do |s|
+        silencers.each do |s|
           backtrace = backtrace.reject { |line| s.call(line.to_s) }
         end
 
@@ -154,10 +154,15 @@ module ActiveSupport
 
       def noise(backtrace)
         backtrace.select do |line|
-          @silencers.any? do |s|
+          silencers.any? do |s|
             s.call(line.to_s)
           end
         end
       end
+
+    def silencers
+      require "debug"; binding.b
+      @silencers
+    end
   end
 end
